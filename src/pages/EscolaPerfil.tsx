@@ -21,10 +21,17 @@ export default function EscolaPerfil() {
 
   const loadConfiguracao = async () => {
     try {
+      console.log('Carregando configuração da escola...');
       const data = await escolaService.getConfiguracao();
+      console.log('Configuração carregada:', data);
       setConfiguracao(data);
     } catch (error) {
       console.error('Erro ao carregar configuração:', error);
+      toast({
+        title: 'Erro ao carregar configuração',
+        description: 'Não foi possível carregar as configurações da escola.',
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
     }
@@ -36,13 +43,21 @@ export default function EscolaPerfil() {
 
     setSaving(true);
     try {
-      await escolaService.updateConfiguracao(configuracao);
+      console.log('Salvando configuração:', configuracao);
+      const updatedConfig = await escolaService.updateConfiguracao(configuracao);
+      console.log('Configuração atualizada:', updatedConfig);
+      setConfiguracao(updatedConfig);
       toast({
         title: 'Sucesso',
         description: 'Configurações atualizadas com sucesso!',
       });
     } catch (error) {
       console.error('Erro ao salvar configuração:', error);
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar as configurações.',
+        variant: 'destructive'
+      });
     } finally {
       setSaving(false);
     }
@@ -54,7 +69,9 @@ export default function EscolaPerfil() {
 
     setUploadingLogo(true);
     try {
+      console.log('Fazendo upload do logo...');
       const logoUrl = await escolaService.uploadLogo(file);
+      console.log('Logo enviado:', logoUrl);
       setConfiguracao(prev => prev ? { ...prev, url_logo: logoUrl } : null);
       toast({
         title: 'Sucesso',
@@ -62,6 +79,11 @@ export default function EscolaPerfil() {
       });
     } catch (error) {
       console.error('Erro ao fazer upload do logo:', error);
+      toast({
+        title: 'Erro ao fazer upload',
+        description: 'Não foi possível fazer upload do logo.',
+        variant: 'destructive'
+      });
     } finally {
       setUploadingLogo(false);
     }

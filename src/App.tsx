@@ -1,77 +1,43 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-
-// Páginas
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import Students from "./pages/Students";
-import Users from "./pages/Users";
-import Alerts from "./pages/Alerts";
-import Classes from "./pages/Classes";
-import Attendances from "./pages/Attendances";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/toaster';
+import { ThemeProvider } from '@/components/theme-provider';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Users from './pages/Users';
+import Turmas from './pages/Turmas';
+import Chamadas from './pages/Chamadas';
 import NotFound from "./pages/NotFound";
 import Statistics from '@/pages/Statistics';
 import EscolaPerfil from './pages/EscolaPerfil';
+import ProtectedRoute from './components/ProtectedRoute';
+import DashboardLayout from './components/layout/DashboardLayout';
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <Router>
           <Routes>
-            {/* Redirecionar a raiz para o dashboard */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            
-            {/* Rota pública de login */}
             <Route path="/login" element={<Login />} />
-            
-            {/* Rotas protegidas dentro do layout do dashboard */}
-            <Route path="/" element={
-              <ProtectedRoute>
-                <DashboardLayout />
-              </ProtectedRoute>
-            }>
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="students" element={<Students />} />
-              <Route path="classes" element={<Classes />} />
-              <Route path="attendances" element={<Attendances />} />
-              <Route path="alerts" element={<Alerts />} />
-              
-              {/* Rotas que exigem acesso de administrador */}
-              <Route path="users" element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Users />
-                </ProtectedRoute>
-              } />
-              <Route path="statistics" element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Statistics />
-                </ProtectedRoute>
-              } />
-              <Route path="escola-perfil" element={
-                <ProtectedRoute requireAdmin={true}>
-                  <EscolaPerfil />
-                </ProtectedRoute>
-              } />
+            <Route element={<DashboardLayout />}>
+              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
+              <Route path="/turmas" element={<ProtectedRoute><Turmas /></ProtectedRoute>} />
+              <Route path="/chamadas" element={<ProtectedRoute><Chamadas /></ProtectedRoute>} />
+              <Route path="/statistics" element={<ProtectedRoute><Statistics /></ProtectedRoute>} />
+              <Route path="/escola-perfil" element={<ProtectedRoute><EscolaPerfil /></ProtectedRoute>} />
             </Route>
-            
-            {/* Rota 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+          <Toaster />
+        </Router>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

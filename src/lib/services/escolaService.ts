@@ -17,19 +17,61 @@ export interface EscolaConfiguracao {
 export const escolaService = {
   getConfiguracao: async () => {
     try {
+      // Primeiro, tenta buscar a configuração existente
       const { data, error } = await supabase
         .from('escola_configuracao')
         .select('*')
         .limit(1)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Se não encontrou nenhum registro, cria um novo
+          return await escolaService.createInitialConfig();
+        }
+        throw error;
+      }
+
       return data as EscolaConfiguracao;
     } catch (error: any) {
       console.error("Erro ao buscar configuração da escola:", error);
       toast({
         title: 'Erro ao carregar configuração',
         description: error.message || 'Ocorreu um erro ao carregar a configuração da escola.',
+        variant: 'destructive'
+      });
+      throw error;
+    }
+  },
+
+  createInitialConfig: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('escola_configuracao')
+        .insert([
+          {
+            nome: 'Minha Escola',
+            email: 'escola@exemplo.com',
+            cor_primaria: '#6D28D9',
+            cor_secundaria: '#4F46E5'
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: 'Configuração inicial criada',
+        description: 'Uma configuração inicial foi criada para sua escola.',
+      });
+
+      return data as EscolaConfiguracao;
+    } catch (error: any) {
+      console.error("Erro ao criar configuração inicial:", error);
+      toast({
+        title: 'Erro ao criar configuração',
+        description: error.message || 'Ocorreu um erro ao criar a configuração inicial da escola.',
         variant: 'destructive'
       });
       throw error;
