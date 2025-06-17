@@ -1,0 +1,87 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 225 100% 98%;
+    --foreground: 240 2% 12%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 240 2% 12%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 2% 12%;
+    
+    --primary: 261 92% 58%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 261 89% 66%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 225 20% 92%;
+    --muted-foreground: 240 5% 29%;
+    
+    --accent: 261 84% 66%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 261 84% 66%;
+    --input: 261 84% 66%;
+    --ring: 261 92% 58%;
+    
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+.glass-card {
+  @apply bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200 dark:border-gray-700;
+}
+
+.data-table {
+  @apply w-full text-sm text-left text-gray-500 dark:text-gray-400 overflow-x-auto;
+}
+
+.data-table thead {
+  @apply text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400;
+}
+
+.data-table th,
+.data-table td {
+  @apply px-4 py-3;
+}
+
+.data-table tbody tr {
+  @apply bg-white border-b dark:bg-gray-800 dark:border-gray-700;
+}
+
+.data-table tbody tr:hover {
+  @apply bg-gray-50 dark:bg-gray-700;
+}
+
+.sidebar {
+  @apply h-full bg-white dark:bg-gray-800 shadow-lg;
+}
+
+.sidebar-collapsed {
+  @apply w-16;
+}
+
+.gradient-primary {
+  @apply bg-gradient-to-r from-[#7B2FF7] to-[#4E57F3];
+}
+
