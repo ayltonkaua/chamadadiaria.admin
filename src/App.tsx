@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -13,132 +14,143 @@ import Chamadas from '@/pages/Chamadas';
 import Statistics from '@/pages/Statistics';
 import EscolaPerfil from '@/pages/EscolaPerfil';
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
 export default function App() {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <AuthProvider>
-        <Router>
-          <div className="min-h-screen bg-background">
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <div className="flex h-screen">
-                      <Sidebar />
-                      <div className="flex-1 flex flex-col">
-                        <Header />
-                        <main className="flex-1 p-6">
-                          <Dashboard />
-                        </main>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <AuthProvider>
+          <Router>
+            <div className="min-h-screen bg-background">
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <div className="flex h-screen">
+                        <Sidebar />
+                        <div className="flex-1 flex flex-col">
+                          <Header />
+                          <main className="flex-1 p-6">
+                            <Dashboard />
+                          </main>
+                        </div>
                       </div>
-                    </div>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <div className="flex h-screen">
-                      <Sidebar />
-                      <div className="flex-1 flex flex-col">
-                        <Header />
-                        <main className="flex-1 p-6">
-                          <Dashboard />
-                        </main>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <div className="flex h-screen">
+                        <Sidebar />
+                        <div className="flex-1 flex flex-col">
+                          <Header />
+                          <main className="flex-1 p-6">
+                            <Dashboard />
+                          </main>
+                        </div>
                       </div>
-                    </div>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/users"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <div className="flex h-screen">
-                      <Sidebar />
-                      <div className="flex-1 flex flex-col">
-                        <Header />
-                        <main className="flex-1 p-6">
-                          <Users />
-                        </main>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/users"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <div className="flex h-screen">
+                        <Sidebar />
+                        <div className="flex-1 flex flex-col">
+                          <Header />
+                          <main className="flex-1 p-6">
+                            <Users />
+                          </main>
+                        </div>
                       </div>
-                    </div>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/turmas"
-                element={
-                  <ProtectedRoute>
-                    <div className="flex h-screen">
-                      <Sidebar />
-                      <div className="flex-1 flex flex-col">
-                        <Header />
-                        <main className="flex-1 p-6">
-                          <Turmas />
-                        </main>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/turmas"
+                  element={
+                    <ProtectedRoute>
+                      <div className="flex h-screen">
+                        <Sidebar />
+                        <div className="flex-1 flex flex-col">
+                          <Header />
+                          <main className="flex-1 p-6">
+                            <Turmas />
+                          </main>
+                        </div>
                       </div>
-                    </div>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/chamadas"
-                element={
-                  <ProtectedRoute>
-                    <div className="flex h-screen">
-                      <Sidebar />
-                      <div className="flex-1 flex flex-col">
-                        <Header />
-                        <main className="flex-1 p-6">
-                          <Chamadas />
-                        </main>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/chamadas"
+                  element={
+                    <ProtectedRoute>
+                      <div className="flex h-screen">
+                        <Sidebar />
+                        <div className="flex-1 flex flex-col">
+                          <Header />
+                          <main className="flex-1 p-6">
+                            <Chamadas />
+                          </main>
+                        </div>
                       </div>
-                    </div>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/statistics"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <div className="flex h-screen">
-                      <Sidebar />
-                      <div className="flex-1 flex flex-col">
-                        <Header />
-                        <main className="flex-1 p-6">
-                          <Statistics />
-                        </main>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/statistics"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <div className="flex h-screen">
+                        <Sidebar />
+                        <div className="flex-1 flex flex-col">
+                          <Header />
+                          <main className="flex-1 p-6">
+                            <Statistics />
+                          </main>
+                        </div>
                       </div>
-                    </div>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/escola-perfil"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <div className="flex h-screen">
-                      <Sidebar />
-                      <div className="flex-1 flex flex-col">
-                        <Header />
-                        <main className="flex-1 p-6">
-                          <EscolaPerfil />
-                        </main>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/escola-perfil"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <div className="flex h-screen">
+                        <Sidebar />
+                        <div className="flex-1 flex flex-col">
+                          <Header />
+                          <main className="flex-1 p-6">
+                            <EscolaPerfil />
+                          </main>
+                        </div>
                       </div>
-                    </div>
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </div>
-          <Toaster />
-        </Router>
-      </AuthProvider>
-    </ThemeProvider>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </div>
+            <Toaster />
+          </Router>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
