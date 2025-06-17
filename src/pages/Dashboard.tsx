@@ -15,42 +15,50 @@ const Dashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                <div className="h-4 w-24 bg-muted animate-pulse rounded"></div>
-              </CardTitle>
-              <div className="h-8 w-8 bg-muted animate-pulse rounded"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 w-16 bg-muted animate-pulse rounded"></div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="p-6 space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                </CardTitle>
+                <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 w-16 bg-gray-200 rounded animate-pulse" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-destructive">Erro ao carregar dados do dashboard</p>
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Erro ao carregar dashboard!</strong>
+          <span className="block sm:inline"> Por favor, tente novamente mais tarde.</span>
+        </div>
       </div>
     );
   }
 
   if (!stats) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-muted-foreground">Nenhum dado disponível</p>
+      <div className="p-6">
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Nenhum dado disponível!</strong>
+          <span className="block sm:inline"> Não há dados para exibir no momento.</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="p-6 space-y-6">
       <div className="px-2 sm:px-0">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground text-sm sm:text-base">
@@ -62,26 +70,19 @@ const Dashboard: React.FC = () => {
 
       {/* 1. Visão Geral - Cards principais */}
       <div className="px-2 sm:px-0">
-        <OverviewCards
-          totalAlunosAtivos={stats.totalAlunosAtivos}
-          presencaHoje={stats.presencaHoje}
-          mediaFaltasSemana={stats.mediaFaltasSemana}
-          alunosAlertaEvasao={stats.alunosAlertaEvasao}
-          turmasSemChamadaHoje={stats.turmasSemChamadaHoje}
-        />
+        <OverviewCards stats={stats} />
       </div>
 
       {/* 2. Gráficos principais */}
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2 px-2 sm:px-0">
-        <FrequenciaDiariaChart frequenciaUltimos7Dias={stats.frequenciaUltimos7Dias} />
-        <RankingTurmasChart rankingTurmasComMaisFaltas={stats.rankingTurmasComMaisFaltas} />
+      <div className="grid gap-6 md:grid-cols-2">
+        <RankingTurmasChart data={stats.rankingTurmasComMaisFaltas} />
+        <DistribuicaoTurnoChart data={stats.distribuicaoFaltasPorTurno} />
       </div>
 
       {/* 3. Gráficos secundários */}
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-3 px-2 sm:px-0">
-        <DistribuicaoTurnoChart distribuicaoFaltasPorTurno={stats.distribuicaoFaltasPorTurno} />
-        <EvolutionChart dadosUltimosMeses={stats.dadosUltimosMeses} />
-        <AlunosCriticosTable alunosSituacaoCritica={stats.alunosSituacaoCritica} />
+      <div className="grid gap-6 md:grid-cols-2">
+        <EvolutionChart data={stats.dadosUltimosMeses} />
+        <AlunosCriticosTable data={stats.alunosSituacaoCritica} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

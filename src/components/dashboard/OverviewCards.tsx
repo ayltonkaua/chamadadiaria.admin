@@ -1,91 +1,69 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Calendar, TrendingDown, AlertTriangle, Clock } from 'lucide-react';
+import { Users, Calendar, TrendingDown, AlertTriangle, Clock, BookOpen, CheckCircle, XCircle } from 'lucide-react';
+import { DashboardStats } from "@/hooks/useDashboardStats";
 
 interface OverviewCardsProps {
-  totalAlunosAtivos: number;
-  presencaHoje: {
-    presentes: number;
-    faltas: number;
-    total: number;
-  };
-  mediaFaltasSemana: number;
-  alunosAlertaEvasao: number;
-  turmasSemChamadaHoje: number;
+  stats: DashboardStats;
 }
 
-export const OverviewCards: React.FC<OverviewCardsProps> = ({
-  totalAlunosAtivos,
-  presencaHoje,
-  mediaFaltasSemana,
-  alunosAlertaEvasao,
-  turmasSemChamadaHoje
-}) => {
+export default function OverviewCards({ stats }: OverviewCardsProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">🎯 Total de Alunos</CardTitle>
+          <CardTitle className="text-sm font-medium">Total de Alunos</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-blue-600">{totalAlunosAtivos}</div>
-          <p className="text-xs text-muted-foreground">Alunos ativos</p>
+          <div className="text-2xl font-bold">{stats.totalAlunosAtivos}</div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">📅 Presença Hoje</CardTitle>
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">Presença Hoje</CardTitle>
+          <CheckCircle className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-green-600">{presencaHoje.presentes}</div>
+          <div className="text-2xl font-bold">{stats.presencaHoje.presentes}</div>
           <p className="text-xs text-muted-foreground">
-            {presencaHoje.faltas} faltas de {presencaHoje.total} total
+            {stats.presencaHoje.total > 0
+              ? `${Math.round((stats.presencaHoje.presentes / stats.presencaHoje.total) * 100)}% de presença`
+              : "Sem dados"}
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">📉 Média Faltas/Semana</CardTitle>
-          <TrendingDown className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">Faltas Hoje</CardTitle>
+          <XCircle className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className={`text-2xl font-bold ${mediaFaltasSemana <= 20 ? 'text-green-600' : mediaFaltasSemana <= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
-            {mediaFaltasSemana.toFixed(1)}
-          </div>
-          <p className="text-xs text-muted-foreground">faltas por dia</p>
+          <div className="text-2xl font-bold">{stats.presencaHoje.faltas}</div>
+          <p className="text-xs text-muted-foreground">
+            {stats.presencaHoje.total > 0
+              ? `${Math.round((stats.presencaHoje.faltas / stats.presencaHoje.total) * 100)}% de faltas`
+              : "Sem dados"}
+          </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">🚨 Alerta Evasão</CardTitle>
-          <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">Alunos em Alerta</CardTitle>
+          <BookOpen className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className={`text-2xl font-bold ${alunosAlertaEvasao === 0 ? 'text-green-600' : alunosAlertaEvasao <= 10 ? 'text-yellow-600' : 'text-red-600'}`}>
-            {alunosAlertaEvasao}
-          </div>
-          <p className="text-xs text-muted-foreground">frequência {'<'} 75%</p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">🔄 Sem Chamada Hoje</CardTitle>
-          <Clock className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className={`text-2xl font-bold ${turmasSemChamadaHoje === 0 ? 'text-green-600' : turmasSemChamadaHoje <= 3 ? 'text-yellow-600' : 'text-red-600'}`}>
-            {turmasSemChamadaHoje}
-          </div>
-          <p className="text-xs text-muted-foreground">turmas pendentes</p>
+          <div className="text-2xl font-bold">{stats.alunosAlertaEvasao}</div>
+          <p className="text-xs text-muted-foreground">
+            {stats.totalAlunosAtivos > 0
+              ? `${Math.round((stats.alunosAlertaEvasao / stats.totalAlunosAtivos) * 100)}% dos alunos`
+              : "Sem dados"}
+          </p>
         </CardContent>
       </Card>
     </div>
   );
-};
+}

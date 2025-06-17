@@ -1,12 +1,11 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
-import { TrendingUp } from 'lucide-react';
+import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 
 interface EvolutionChartProps {
-  dadosUltimosMeses: {
+  data: {
     presencas_por_mes: Array<{
       mes: string;
       percentual_presenca: number;
@@ -25,39 +24,41 @@ const chartConfig = {
   },
 };
 
-export const EvolutionChart: React.FC<EvolutionChartProps> = ({ dadosUltimosMeses }) => {
-  const getTrendColor = () => {
-    switch (dadosUltimosMeses.tendencia) {
-      case 'subindo': return 'text-green-600';
-      case 'descendo': return 'text-red-600';
-      default: return 'text-muted-foreground';
-    }
-  };
-
-  const getTrendText = () => {
-    switch (dadosUltimosMeses.tendencia) {
-      case 'subindo': return 'Tendência de melhora';
-      case 'descendo': return 'Tendência de piora';
-      default: return 'Tendência estável';
+export default function EvolutionChart({ data }: EvolutionChartProps) {
+  const getTendenciaIcon = () => {
+    switch (data.tendencia) {
+      case 'subindo':
+        return <ArrowUp className="h-4 w-4 text-green-500" />;
+      case 'descendo':
+        return <ArrowDown className="h-4 w-4 text-red-500" />;
+      default:
+        return <Minus className="h-4 w-4 text-gray-500" />;
     }
   };
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <TrendingUp className="h-5 w-5" />
-          Evolução da Frequência por Mês
-        </CardTitle>
-        <div className={`text-xs ${getTrendColor()}`}>
-          {getTrendText()}
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            {getTendenciaIcon()}
+            Evolução da Frequência
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            {getTendenciaIcon()}
+            <span className="text-sm text-muted-foreground">
+              {data.tendencia === 'subindo' ? 'Tendência positiva' : 
+               data.tendencia === 'descendo' ? 'Tendência negativa' : 
+               'Tendência estável'}
+            </span>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-4">
         <ChartContainer config={chartConfig} className="h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart 
-              data={dadosUltimosMeses.presencas_por_mes}
+              data={data.presencas_por_mes}
               margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
@@ -110,4 +111,4 @@ export const EvolutionChart: React.FC<EvolutionChartProps> = ({ dadosUltimosMese
       </CardContent>
     </Card>
   );
-};
+}

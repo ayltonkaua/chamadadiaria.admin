@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
@@ -6,13 +5,13 @@ import { ChartContainer } from '@/components/ui/chart';
 import { Clock } from 'lucide-react';
 
 interface DistribuicaoTurnoChartProps {
-  distribuicaoFaltasPorTurno: Array<{
+  data: Array<{
     turno: string;
     faltas: number;
   }>;
 }
 
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658'];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28'];
 
 const chartConfig = {
   faltas: {
@@ -21,9 +20,7 @@ const chartConfig = {
   },
 };
 
-export const DistribuicaoTurnoChart: React.FC<DistribuicaoTurnoChartProps> = ({ 
-  distribuicaoFaltasPorTurno 
-}) => {
+export default function DistribuicaoTurnoChart({ data }: DistribuicaoTurnoChartProps) {
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
@@ -37,16 +34,16 @@ export const DistribuicaoTurnoChart: React.FC<DistribuicaoTurnoChartProps> = ({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
               <Pie
-                data={distribuicaoFaltasPorTurno}
+                data={data}
                 cx="50%"
-                cy="45%"
+                cy="50%"
                 labelLine={false}
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={60}
+                outerRadius={80}
                 fill="#8884d8"
                 dataKey="faltas"
               >
-                {distribuicaoFaltasPorTurno.map((entry, index) => (
+                {data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -76,4 +73,4 @@ export const DistribuicaoTurnoChart: React.FC<DistribuicaoTurnoChartProps> = ({
       </CardContent>
     </Card>
   );
-};
+}

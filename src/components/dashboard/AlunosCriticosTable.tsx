@@ -1,11 +1,15 @@
-
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { AlertTriangle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface AlunosCriticosTableProps {
-  alunosSituacaoCritica: Array<{
+  data: Array<{
     aluno_id: string;
     aluno_nome: string;
     matricula: string;
@@ -14,45 +18,41 @@ interface AlunosCriticosTableProps {
   }>;
 }
 
-export const AlunosCriticosTable: React.FC<AlunosCriticosTableProps> = ({ 
-  alunosSituacaoCritica 
-}) => {
+export default function AlunosCriticosTable({ data }: AlunosCriticosTableProps) {
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-          <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />
-          <span className="text-sm sm:text-base">Alunos em Situação Crítica (+12 Faltas)</span>
-        </CardTitle>
+    <Card>
+      <CardHeader>
+        <CardTitle>Alunos em Situação Crítica</CardTitle>
       </CardHeader>
-      <CardContent className="p-2 sm:p-4">
-        <div className="space-y-2 max-h-[200px] sm:max-h-[240px] overflow-y-auto">
-          {alunosSituacaoCritica.length === 0 ? (
-            <p className="text-center text-muted-foreground py-6 sm:py-8 text-xs sm:text-sm">
-              Nenhum aluno com mais de 12 faltas no momento
-            </p>
-          ) : (
-            alunosSituacaoCritica.slice(0, 10).map((aluno) => (
-              <div key={aluno.aluno_id} className="flex items-center justify-between p-2 sm:p-3 border rounded-lg bg-muted/20">
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-xs sm:text-sm truncate">{aluno.aluno_nome}</div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {aluno.matricula} • {aluno.turma_nome}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Badge 
-                    variant={aluno.total_faltas >= 20 ? 'destructive' : 'secondary'}
-                    className="text-xs px-1 py-0.5 sm:px-2 sm:py-1"
-                  >
-                    {aluno.total_faltas} faltas
-                  </Badge>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>Matrícula</TableHead>
+              <TableHead>Turma</TableHead>
+              <TableHead className="text-right">Total de Faltas</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((aluno) => (
+              <TableRow key={aluno.aluno_id}>
+                <TableCell className="font-medium">{aluno.aluno_nome}</TableCell>
+                <TableCell>{aluno.matricula}</TableCell>
+                <TableCell>{aluno.turma_nome}</TableCell>
+                <TableCell className="text-right">{aluno.total_faltas}</TableCell>
+              </TableRow>
+            ))}
+            {data.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center text-muted-foreground">
+                  Nenhum aluno em situação crítica
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );
-};
+}
