@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +16,7 @@ import Alerts from "./pages/Alerts";
 import Classes from "./pages/Classes";
 import Attendances from "./pages/Attendances";
 import NotFound from "./pages/NotFound";
+import Statistics from '@/pages/Statistics';
 
 const queryClient = new QueryClient();
 
@@ -50,6 +50,11 @@ const App = () => (
               <Route path="users" element={
                 <ProtectedRoute requireAdmin={true}>
                   <Users />
+                </ProtectedRoute>
+              } />
+              <Route path="statistics" element={
+                <ProtectedRoute requireAdmin={true}>
+                  <Statistics />
                 </ProtectedRoute>
               } />
             </Route>

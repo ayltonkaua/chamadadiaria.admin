@@ -1,38 +1,26 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
-export type Usuario = {
+export interface Usuario {
   id: string;
   email: string;
   created_at: string;
   updated_at: string;
   role: string;
-};
+}
 
-// Helper function to get the default escola_id (first escola in the system)
+// Helper function to get the default escola_id
 const getDefaultEscolaId = async (): Promise<string> => {
-  const { data: escola } = await supabase
+  const { data: escolas, error } = await supabase
     .from('escola_configuracao')
     .select('id')
-    .limit(1)
-    .single();
-    
-  if (!escola?.id) {
-    // If no escola exists, create a default one
-    const { data: newEscola } = await supabase
-      .from('escola_configuracao')
-      .insert({
-        nome: 'Escola Padrão',
-        email: 'admin@escola.com'
-      })
-      .select('id')
-      .single();
-      
-    return newEscola?.id || '';
+    .limit(1);
+
+  if (error || !escolas || escolas.length === 0) {
+    throw new Error('Nenhuma escola encontrada no sistema');
   }
-  
-  return escola.id;
+
+  return escolas[0].id;
 };
 
 export const usuariosService = {
@@ -80,91 +68,104 @@ export const usuariosService = {
     }
   },
   
-  create: async (email: string, password: string, role: string = 'user') => {
+  create: async (userData: { email: string, password: string, role: string }) => {
     try {
-      // Criar usuário no Auth
+      // Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email,
-        password,
+        email: userData.email,
+        password: userData.password,
         email_confirm: true
       });
-      
+
       if (authError) throw authError;
-      
+
       if (authData.user) {
         // Obter escola_id padrão
         const escolaId = await getDefaultEscolaId();
-        
-        // Adicionar papel/função do usuário
+
+        // Adicionar papel do usuário
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({
             user_id: authData.user.id,
-            role: role,
+            role: userData.role,
             escola_id: escolaId
           });
-          
+
         if (roleError) throw roleError;
-        
+
         return {
           id: authData.user.id,
           email: authData.user.email || '',
-          created_at: authData.user.created_at,
-          updated_at: authData.user.created_at,
-          role: role,
+          created_at: authData.user.created_at || '',
+          updated_at: authData.user.last_sign_in_at || authData.user.created_at || '',
+          role: userData.role
         };
       }
-      
-      throw new Error('Falha ao criar usuário');
+
+      throw new Error('Erro ao criar usuário');
     } catch (error: any) {
+      console.error("Erro ao criar usuário:", error);
       toast({
-        title: 'Erro',
-        description: error.message,
-        variant: 'destructive',
+        title: 'Erro ao criar usuário',
+        description: error.message || 'Ocorreu um erro ao criar o usuário.',
+        variant: 'destructive'
       });
       throw error;
     }
   },
   
-  updatePassword: async (id: string, password: string) => {
+  update: async (id: string, userData: { email?: string, password?: string, role?: string }) => {
     try {
-      const { error } = await supabase.auth.admin.updateUserById(
-        id,
-        { password }
-      );
-      
-      if (error) throw error;
-      return true;
-    } catch (error: any) {
-      toast({
-        title: 'Erro',
-        description: error.message,
-        variant: 'destructive',
-      });
-      throw error;
-    }
-  },
-  
-  updateRole: async (id: string, role: string) => {
-    try {
-      // Obter escola_id padrão
-      const escolaId = await getDefaultEscolaId();
-      
-      const { error } = await supabase
+      // Atualizar senha se fornecida
+      if (userData.password) {
+        const { error: passwordError } = await supabase.auth.admin.updateUserById(
+          id,
+          { password: userData.password }
+        );
+        if (passwordError) throw passwordError;
+      }
+
+      // Atualizar papel se fornecido
+      if (userData.role) {
+        const escolaId = await getDefaultEscolaId();
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .update({ 
+            role: userData.role,
+            escola_id: escolaId
+          })
+          .eq('user_id', id);
+
+        if (roleError) throw roleError;
+      }
+
+      // Buscar usuário atualizado
+      const { data: { users }, error: fetchError } = await supabase.auth.admin.listUsers();
+      if (fetchError) throw fetchError;
+
+      const updatedUser = users?.find(u => u.id === id);
+      if (!updatedUser) throw new Error('Usuário não encontrado');
+
+      const { data: roleData } = await supabase
         .from('user_roles')
-        .upsert({
-          user_id: id,
-          role,
-          escola_id: escolaId
-        });
-        
-      if (error) throw error;
-      return true;
+        .select('role')
+        .eq('user_id', id)
+        .maybeSingle();
+
+      return {
+        id: updatedUser.id,
+        email: updatedUser.email || '',
+        created_at: updatedUser.created_at || '',
+        updated_at: updatedUser.last_sign_in_at || updatedUser.created_at || '',
+        role: roleData?.role || 'user'
+      };
     } catch (error: any) {
+      console.error("Erro ao atualizar usuário:", error);
       toast({
-        title: 'Erro',
-        description: error.message,
-        variant: 'destructive',
+        title: 'Erro ao atualizar usuário',
+        description: error.message || 'Ocorreu um erro ao atualizar o usuário.',
+        variant: 'destructive'
       });
       throw error;
     }
@@ -172,24 +173,25 @@ export const usuariosService = {
   
   delete: async (id: string) => {
     try {
-      const { error } = await supabase.auth.admin.deleteUser(id);
-        
-      if (error) throw error;
-      
-      // A função deleteUser deveria excluir automaticamente 
-      // os registros nas tabelas com foreign keys configuradas,
-      // mas para garantir, podemos excluir explicitamente
-      await supabase
+      // Remover papel do usuário
+      const { error: roleError } = await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', id);
-        
+
+      if (roleError) throw roleError;
+
+      // Remover usuário do Supabase Auth
+      const { error: authError } = await supabase.auth.admin.deleteUser(id);
+      if (authError) throw authError;
+
       return true;
     } catch (error: any) {
+      console.error("Erro ao excluir usuário:", error);
       toast({
-        title: 'Erro ao excluir',
-        description: error.message,
-        variant: 'destructive',
+        title: 'Erro ao excluir usuário',
+        description: error.message || 'Ocorreu um erro ao excluir o usuário.',
+        variant: 'destructive'
       });
       throw error;
     }
