@@ -1,82 +1,55 @@
-import { Button } from "@/components/ui/button";
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { useState, useEffect } from 'react';
-import { escolaService, EscolaConfiguracao } from '@/lib/services/escolaService';
+import { useAuth } from '@/contexts/AuthContext';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
-export function Header() {
+export default function Header() {
   const { user } = useAuth();
-  const [configuracao, setConfiguracao] = useState<EscolaConfiguracao | null>(null);
+  const [configuracao, setConfiguracao] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadConfiguracao = async () => {
+    async function loadConfiguracao() {
       try {
-        console.log('Carregando configuração da escola...');
-        const data = await escolaService.getConfiguracao();
-        console.log('Configuração carregada:', data);
+        const { data, error } = await supabase
+          .from('escola_configuracao')
+          .select('*')
+          .single();
+
+        if (error) throw error;
         setConfiguracao(data);
       } catch (error) {
         console.error('Erro ao carregar configuração:', error);
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     loadConfiguracao();
   }, []);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-  };
-
   if (loading) {
     return (
-      <header className="border-b bg-[#6D28D9] text-white">
-        <div className="flex h-16 items-center px-4">
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg font-semibold">
-              Carregando...
-            </h2>
-          </div>
+      <header className="border-b">
+        <div className="flex h-14 items-center px-4">
+          <div className="animate-pulse h-8 w-48 bg-muted rounded"></div>
         </div>
       </header>
     );
   }
 
   return (
-    <header 
-      className="border-b"
-      style={{
-        backgroundColor: configuracao?.cor_primaria || '#6D28D9',
-        color: '#fff'
-      }}
-    >
-      <div className="flex h-16 items-center px-4">
-        <div className="flex items-center gap-4">
-          {configuracao?.url_logo && (
-            <img
-              src={configuracao.url_logo}
-              alt="Logo da escola"
-              className="h-10 w-10 object-contain bg-white rounded-lg p-1"
-            />
-          )}
-          <h2 className="text-lg font-semibold">
-            {configuracao?.nome || 'Sistema de Chamadas'}
-          </h2>
-        </div>
-        <div className="ml-auto flex items-center space-x-4">
-          <span className="text-sm text-white/80">
-            {user?.email}
-          </span>
-          <Button 
-            variant="ghost" 
-            onClick={handleSignOut}
-            className="text-white hover:bg-white/10 hover:text-white"
-          >
-            Sair
-          </Button>
-        </div>
+    <header className="border-b" style={{ backgroundColor: configuracao?.cor_primaria || '#1a1a1a' }}>
+      <div className="flex h-14 items-center px-4">
+        {configuracao?.logo_url && (
+          <img
+            src={configuracao.logo_url}
+            alt="Logo"
+            className="h-8 w-8 mr-2"
+          />
+        )}
+        <h1 className="text-lg font-semibold" style={{ color: configuracao?.cor_texto || '#ffffff' }}>
+          {configuracao?.nome_escola || 'Admin Chamada'}
+        </h1>
       </div>
     </header>
   );
