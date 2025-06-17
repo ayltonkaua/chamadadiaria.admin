@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   BarChart,
@@ -23,6 +23,21 @@ import {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
+interface UserRole {
+  user_id: string;
+  role: string;
+}
+
+interface Attendance {
+  id: string;
+  aluno_id: string;
+  turma_id: string;
+  data_chamada: string;
+  presente: boolean;
+  falta_justificada: boolean;
+  created_at: string;
+}
+
 const Statistics: React.FC = () => {
   // Buscar dados de usuários
   const { data: usersData, isLoading: usersLoading } = useQuery({
@@ -30,11 +45,10 @@ const Statistics: React.FC = () => {
     queryFn: async () => {
       const { data: users, error } = await supabase
         .from('user_roles')
-        .select('role, created_at')
-        .order('created_at', { ascending: false });
+        .select('user_id, role');
 
       if (error) throw error;
-      return users;
+      return users as UserRole[];
     }
   });
 
@@ -42,19 +56,22 @@ const Statistics: React.FC = () => {
   const { data: attendanceData, isLoading: attendanceLoading } = useQuery({
     queryKey: ['attendance-stats'],
     queryFn: async () => {
+      // Buscar presenças dos últimos 7 dias
+      const sevenDaysAgo = subDays(new Date(), 7);
       const { data: attendance, error } = await supabase
         .from('presencas')
         .select('*')
-        .order('data', { ascending: false });
+        .gte('data_chamada', sevenDaysAgo.toISOString())
+        .order('data_chamada', { ascending: true });
 
       if (error) throw error;
-      return attendance;
+      return attendance as Attendance[];
     }
   });
 
   // Processar dados para gráficos
   const processUserData = () => {
-    if (!usersData) return null;
+    if (!usersData) return [];
 
     const roleCount = usersData.reduce((acc: any, user) => {
       acc[user.role] = (acc[user.role] || 0) + 1;
@@ -68,26 +85,32 @@ const Statistics: React.FC = () => {
   };
 
   const processAttendanceData = () => {
-    if (!attendanceData) return null;
+    if (!attendanceData) return [];
 
-    const dailyAttendance = attendanceData.reduce((acc: any, record) => {
-      const date = format(new Date(record.data), 'dd/MM/yyyy');
-      if (!acc[date]) {
-        acc[date] = { presenca: 0, falta: 0 };
-      }
-      if (record.presente) {
-        acc[date].presenca++;
-      } else {
-        acc[date].falta++;
-      }
-      return acc;
-    }, {});
+    // Inicializar dados para os últimos 7 dias
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = subDays(new Date(), i);
+      return {
+        date: format(date, 'dd/MM/yyyy'),
+        presenca: 0,
+        falta: 0
+      };
+    }).reverse();
 
-    return Object.entries(dailyAttendance).map(([date, data]: [string, any]) => ({
-      date,
-      presenca: data.presenca,
-      falta: data.falta
-    })).slice(0, 7); // Últimos 7 dias
+    // Preencher com dados reais
+    attendanceData.forEach(record => {
+      const date = format(new Date(record.data_chamada), 'dd/MM/yyyy');
+      const dayData = last7Days.find(d => d.date === date);
+      if (dayData) {
+        if (record.presente) {
+          dayData.presenca++;
+        } else {
+          dayData.falta++;
+        }
+      }
+    });
+
+    return last7Days;
   };
 
   if (usersLoading || attendanceLoading) {

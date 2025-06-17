@@ -17,6 +17,7 @@ import Classes from "./pages/Classes";
 import Attendances from "./pages/Attendances";
 import NotFound from "./pages/NotFound";
 import Statistics from '@/pages/Statistics';
+import EscolaPerfil from './pages/EscolaPerfil';
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,11 @@ const App = () => (
               <Route path="statistics" element={
                 <ProtectedRoute requireAdmin={true}>
                   <Statistics />
+                </ProtectedRoute>
+              } />
+              <Route path="escola-perfil" element={
+                <ProtectedRoute requireAdmin={true}>
+                  <EscolaPerfil />
                 </ProtectedRoute>
               } />
             </Route>

@@ -26,33 +26,35 @@ const getDefaultEscolaId = async (): Promise<string> => {
 export const usuariosService = {
   getAll: async () => {
     try {
-      // Obter usuários do Supabase Auth
+      // Primeiro, buscar todos os usuários da tabela user_roles
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) {
+        throw rolesError;
+      }
+
+      // Depois, buscar os detalhes dos usuários no Auth
       const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
       
       if (authError) {
         throw authError;
       }
-      
-      // Para cada usuário, obtenha seu papel/função
-      if (authUsers) {
-        const usersWithRoles = await Promise.all(
-          authUsers.map(async (user) => {
-            const { data: roleData } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', user.id)
-              .maybeSingle();
-              
-            return {
-              id: user.id,
-              email: user.email || '',
-              created_at: user.created_at || '',
-              updated_at: user.last_sign_in_at || user.created_at || '',
-              role: roleData?.role || 'user',
-            };
-          })
-        );
-        
+
+      // Combinar os dados
+      if (authUsers && userRoles) {
+        const usersWithRoles = authUsers.map(user => {
+          const userRole = userRoles.find(role => role.user_id === user.id);
+          return {
+            id: user.id,
+            email: user.email || '',
+            created_at: user.created_at || '',
+            updated_at: user.last_sign_in_at || user.created_at || '',
+            role: userRole?.role || 'user',
+          };
+        });
+
         return usersWithRoles;
       }
       
@@ -80,16 +82,12 @@ export const usuariosService = {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Obter escola_id padrão
-        const escolaId = await getDefaultEscolaId();
-
         // Adicionar papel do usuário
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({
             user_id: authData.user.id,
-            role: userData.role,
-            escola_id: escolaId
+            role: userData.role
           });
 
         if (roleError) throw roleError;
@@ -128,13 +126,9 @@ export const usuariosService = {
 
       // Atualizar papel se fornecido
       if (userData.role) {
-        const escolaId = await getDefaultEscolaId();
         const { error: roleError } = await supabase
           .from('user_roles')
-          .update({ 
-            role: userData.role,
-            escola_id: escolaId
-          })
+          .update({ role: userData.role })
           .eq('user_id', id);
 
         if (roleError) throw roleError;
