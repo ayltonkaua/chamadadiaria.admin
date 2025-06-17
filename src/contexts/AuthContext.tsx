@@ -1,157 +1,116 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
-type AuthContextType = {
-  session: Session | null;
+interface User {
+  id: string;
+  email: string;
+  role: string;
+}
+
+interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  isAdmin: boolean;
-};
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Configurar o listener de autenticação PRIMEIRO
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        // Apenas atualizações síncronas de estado aqui
-        setSession(currentSession);
-        setUser(currentSession?.user || null);
-        
-        // Se há uma sessão, verificar o papel do usuário separadamente
-        if (currentSession?.user) {
-          // Adiar chamadas ao Supabase com setTimeout
-          setTimeout(async () => {
-            try {
-              const { data, error } = await supabase
-                .from('user_roles')
-                .select('role')
-                .eq('user_id', currentSession.user.id)
-                .maybeSingle();
-                
-              if (!error && data) {
-                setIsAdmin(data.role === 'admin');
-              }
-            } catch (error) {
-              console.error("Erro ao buscar papel do usuário:", error);
+    // Verificar sessão atual
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        // Buscar o papel do usuário
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single()
+          .then(({ data }) => {
+            if (data) {
+              setUser({
+                id: session.user.id,
+                email: session.user.email!,
+                role: data.role,
+              });
             }
-          }, 0);
-        } else {
-          setIsAdmin(false);
-        }
+          });
       }
-    );
-    
-    // DEPOIS verificar se já existe uma sessão ativa
-    const checkSession = async () => {
-      try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        
-        setSession(currentSession);
-        setUser(currentSession?.user || null);
-        
-        // Se há um usuário, verificar se ele é administrador
-        if (currentSession?.user) {
-          const { data, error } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', currentSession.user.id)
-            .maybeSingle();
-            
-          if (!error && data) {
-            setIsAdmin(data.role === 'admin');
-          }
+      setLoading(false);
+    });
+
+    // Escutar mudanças na autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        // Buscar o papel do usuário
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (data) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email!,
+            role: data.role,
+          });
         }
-      } catch (error) {
-        console.error("Erro ao verificar sessão:", error);
-      } finally {
-        setLoading(false);
+      } else {
+        setUser(null);
       }
-    };
-    
-    checkSession();
+      setLoading(false);
+    });
 
     return () => {
       subscription.unsubscribe();
     };
   }, []);
 
-  // Função para login
   const signIn = async (email: string, password: string) => {
     try {
-      setLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
       if (error) throw error;
-      
-      // Verificar se o usuário é administrador
-      if (data.user) {
-        const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.user.id)
-          .maybeSingle();
-          
-        if (!roleError && roleData) {
-          setIsAdmin(roleData.role === 'admin');
-        }
-      }
-      
+
       navigate('/dashboard');
     } catch (error: any) {
-      toast({
-        title: 'Erro ao fazer login',
-        description: error.message || 'Verifique suas credenciais e tente novamente.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+      throw new Error(error.message);
     }
   };
 
-  // Função para logout
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       navigate('/login');
     } catch (error: any) {
-      toast({
-        title: 'Erro ao sair',
-        description: error.message || 'Ocorreu um erro ao tentar sair.',
-        variant: 'destructive',
-      });
+      throw new Error(error.message);
     }
   };
 
-  const value = {
-    session,
-    user,
-    loading,
-    signIn,
-    signOut,
-    isAdmin
-  };
+  return (
+    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
-};
+}
