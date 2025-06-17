@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -6,7 +5,7 @@ import { ChartContainer } from '@/components/ui/chart';
 import { TrendingDown } from 'lucide-react';
 
 interface RankingTurmasChartProps {
-  rankingTurmasComMaisFaltas: Array<{
+  data: Array<{
     turma_nome: string;
     alunos_com_mais_9_faltas: number;
     turma_id: string;
@@ -20,9 +19,7 @@ const chartConfig = {
   },
 };
 
-export const RankingTurmasChart: React.FC<RankingTurmasChartProps> = ({ 
-  rankingTurmasComMaisFaltas 
-}) => {
+export default function RankingTurmasChart({ data }: RankingTurmasChartProps) {
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
@@ -32,7 +29,7 @@ export const RankingTurmasChart: React.FC<RankingTurmasChartProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-2 sm:p-4">
-        {rankingTurmasComMaisFaltas.length === 0 ? (
+        {data.length === 0 ? (
           <div className="flex justify-center items-center h-[200px] sm:h-[280px]">
             <p className="text-muted-foreground text-sm">Nenhuma turma com alunos com mais de 9 faltas</p>
           </div>
@@ -40,26 +37,25 @@ export const RankingTurmasChart: React.FC<RankingTurmasChartProps> = ({
           <ChartContainer config={chartConfig} className="h-[200px] sm:h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
-                data={rankingTurmasComMaisFaltas.slice(0, 10)} 
+                data={data.slice(0, 10)} 
                 layout="vertical"
                 margin={{ top: 10, right: 10, left: 40, bottom: 10 }}
               >
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                 <XAxis 
-                  type="number" 
+                  type="category" 
+                  dataKey="turma_nome" 
                   fontSize={10} 
                   tickLine={false} 
                   axisLine={false}
                   tick={{ fontSize: 10 }}
                 />
                 <YAxis 
-                  type="category" 
-                  dataKey="turma_nome" 
+                  type="number" 
                   fontSize={9}
                   tickLine={false}
                   axisLine={false}
-                  width={35}
-                  tick={{ fontSize: 9 }}
+                  tickFormatter={(value) => `${value}`}
                 />
                 <Tooltip 
                   content={({ active, payload, label }) => {
@@ -89,4 +85,4 @@ export const RankingTurmasChart: React.FC<RankingTurmasChartProps> = ({
       </CardContent>
     </Card>
   );
-};
+}

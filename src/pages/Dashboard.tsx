@@ -1,11 +1,10 @@
 import React from 'react';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
-import { OverviewCards } from '@/components/dashboard/OverviewCards';
-import { FrequenciaDiariaChart } from '@/components/dashboard/FrequenciaDiariaChart';
-import { RankingTurmasChart } from '@/components/dashboard/RankingTurmasChart';
-import { DistribuicaoTurnoChart } from '@/components/dashboard/DistribuicaoTurnoChart';
-import { AlunosCriticosTable } from '@/components/dashboard/AlunosCriticosTable';
-import { EvolutionChart } from '@/components/dashboard/EvolutionChart';
+import OverviewCards from '@/components/dashboard/OverviewCards';
+import RankingTurmasChart from '@/components/dashboard/RankingTurmasChart';
+import DistribuicaoTurnoChart from '@/components/dashboard/DistribuicaoTurnoChart';
+import EvolutionChart from '@/components/dashboard/EvolutionChart';
+import AlunosCriticosTable from '@/components/dashboard/AlunosCriticosTable';
 import { OfflineIndicator } from '@/components/offline/OfflineIndicator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, BookOpen, Calendar, CheckCircle, XCircle } from 'lucide-react';
