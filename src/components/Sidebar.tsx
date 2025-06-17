@@ -1,88 +1,112 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useAuth } from '@/hooks/useAuth';
-import { 
-  LayoutDashboard, 
-  Users, 
-  BookOpen, 
-  Calendar, 
-  Settings,
-  School
+import {
+  LayoutDashboard,
+  Users,
+  BookOpen,
+  Calendar,
+  BarChart3,
+  School,
+  LogOut,
 } from 'lucide-react';
 
-interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
+export default function Sidebar() {
+  const location = useLocation();
+  const { user, signOut } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
 
-export function Sidebar({ className }: SidebarProps) {
-  const { user } = useAuth();
+  useEffect(() => {
+    async function checkUserRole() {
+      if (user) {
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+        
+        setIsAdmin(data?.role === 'admin');
+      }
+    }
 
-  const links = [
+    checkUserRole();
+  }, [user]);
+
+  const menuItems = [
     {
       title: 'Dashboard',
-      href: '/dashboard',
+      path: '/dashboard',
       icon: LayoutDashboard,
+      adminOnly: false,
     },
     {
       title: 'Usuários',
-      href: '/users',
+      path: '/users',
       icon: Users,
-      adminOnly: true
+      adminOnly: true,
     },
     {
       title: 'Turmas',
-      href: '/turmas',
+      path: '/turmas',
       icon: BookOpen,
+      adminOnly: false,
     },
     {
       title: 'Chamadas',
-      href: '/chamadas',
+      path: '/chamadas',
       icon: Calendar,
+      adminOnly: false,
     },
     {
       title: 'Estatísticas',
-      href: '/statistics',
-      icon: Settings,
-      adminOnly: true
+      path: '/statistics',
+      icon: BarChart3,
+      adminOnly: true,
     },
     {
       title: 'Perfil da Escola',
-      href: '/escola-perfil',
+      path: '/escola-perfil',
       icon: School,
-      adminOnly: true
-    }
+      adminOnly: true,
+    },
   ];
 
   return (
-    <div className={cn("pb-12", className)}>
-      <div className="space-y-4 py-4">
-        <div className="px-3 py-2">
-          <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
-            Menu
-          </h2>
-          <ScrollArea className="h-[300px] px-2">
-            <div className="space-y-1">
-              {links.map((link) => {
-                if (link.adminOnly && user?.role !== 'admin') return null;
-                
-                const Icon = link.icon;
-                return (
-                  <Button
-                    key={link.href}
-                    variant="ghost"
-                    className="w-full justify-start"
-                    asChild
-                  >
-                    <Link to={link.href}>
-                      <Icon className="mr-2 h-4 w-4" />
-                      {link.title}
-                    </Link>
-                  </Button>
-                );
-              })}
-            </div>
-          </ScrollArea>
-        </div>
+    <div className="flex h-screen w-64 flex-col bg-background border-r">
+      <div className="flex h-14 items-center border-b px-4">
+        <h2 className="text-lg font-semibold">Admin Chamada</h2>
+      </div>
+      <div className="flex-1 overflow-auto py-2">
+        <nav className="grid items-start px-2 text-sm font-medium">
+          {menuItems.map((item) => {
+            if (item.adminOnly && !isAdmin) return null;
+            
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground',
+                  location.pathname === item.path && 'bg-muted text-foreground'
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.title}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+      <div className="mt-auto border-t p-4">
+        <button
+          onClick={() => signOut()}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-foreground"
+        >
+          <LogOut className="h-4 w-4" />
+          Sair
+        </button>
       </div>
     </div>
   );
